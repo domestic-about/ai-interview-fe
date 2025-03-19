@@ -1,8 +1,22 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, desktopCapturer, dialog } = require("electron");
-const path = require("path");
-const fs = require("fs");
-const isDev = process.env.NODE_ENV === "development";
-const { analyzeImage } = require("./mockBackend");
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  globalShortcut,
+  desktopCapturer,
+  dialog,
+} from "electron";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+import { analyzeImage } from "./mockBackend.mjs";
+
+// ES Modules 中 __dirname 的替代方案
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// const isDev = process.env.NODE_ENV === "development";
+// console.log(process.env.NODE_ENV,'idDev');
 
 let mainWindow;
 
@@ -11,16 +25,17 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,  // 改为 false
+      contextIsolation: true,  // 改为 true
+      sandbox: false, 
       // 如果需要在渲染进程中使用Node.js API，请设置以下选项
       // preload: path.join(__dirname, 'preload.js')
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload.mjs"),
     },
   });
 
   // 根据是否为开发环境加载不同的URL
-  if (isDev) {
+  if (!app.isPackaged) {
     mainWindow.loadURL("http://localhost:5173"); // Vite默认开发服务器地址
     mainWindow.webContents.openDevTools(); // 在开发模式下打开开发者工具
   } else {
@@ -32,7 +47,10 @@ function createWindow() {
   });
 
   // 注册全局快捷键 (Cmd+Shift+4 或 Ctrl+Shift+4)
-  const screenshotShortcut = process.platform === "darwin" ? "CommandOrControl+Shift+4" : "CommandOrControl+Shift+4";
+  const screenshotShortcut =
+    process.platform === "darwin"
+      ? "CommandOrControl+Shift+4"
+      : "CommandOrControl+Shift+4";
   globalShortcut.register(screenshotShortcut, () => {
     takeScreenshot();
   });
@@ -46,9 +64,13 @@ async function takeScreenshot() {
       thumbnailSize: { width: 1920, height: 1080 },
     });
     const primaryDisplay = sources[0]; // 获取主显示器
-
-    if (primaryDisplay) {
-      const screenshotPath = path.join(app.getPath("temp"), `screenshot-${Date.now()}.png`);
+    console.log(primaryDisplay,'primaryDisplay');
+    if (primaryDisplay) { 
+      console.log(primaryDisplay,'primaryDisplay1');
+      const screenshotPath = path.join(
+        app.getPath("temp"),
+        `screenshot-${Date.now()}.png`
+      );
       fs.writeFileSync(screenshotPath, primaryDisplay.thumbnail.toPNG());
 
       // 将截图发送到渲染进程

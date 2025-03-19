@@ -13,7 +13,8 @@ const ScreenshotAnalyzer: React.FC = () => {
 
   useEffect(() => {
     // 监听截图事件
-    window.electron.onScreenshotTaken((path: string) => {
+    window.electron?.onScreenshotTaken((path: string) => {
+      console.log(path, "path");
       setScreenshotPath(path);
       analyzeScreenshot(path);
     });
@@ -30,8 +31,10 @@ const ScreenshotAnalyzer: React.FC = () => {
 
       const analysisResult = await window.electron.analyzeScreenshot(path);
       setResult(analysisResult);
-    } catch (error) {
-      setResult({ error: error.message });
+    } catch (error: unknown) {
+      setResult({
+        error: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       setIsAnalyzing(false);
     }
@@ -41,7 +44,9 @@ const ScreenshotAnalyzer: React.FC = () => {
     <div className="flex flex-col h-screen">
       <header className="bg-gray-800 text-white p-4">
         <h1 className="text-xl font-bold">截屏问答应用</h1>
-        <p className="text-sm">按下 Ctrl+Shift+4 (Windows) 或 Cmd+Shift+4 (Mac) 进行截屏</p>
+        <p className="text-sm">
+          按下 Ctrl+Shift+4 (Windows) 或 Cmd+Shift+4 (Mac) 进行截屏
+        </p>
       </header>
 
       <div className="flex-1 p-4 overflow-auto">
@@ -74,11 +79,15 @@ const ScreenshotAnalyzer: React.FC = () => {
               <>
                 <div className="mb-4">
                   <h3 className="font-semibold text-lg">问题</h3>
-                  <p className="p-2 bg-white border rounded">{result.question}</p>
+                  <p className="p-2 bg-white border rounded">
+                    {result.question}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">答案</h3>
-                  <div className="p-2 bg-white border rounded whitespace-pre-wrap">{result.answer}</div>
+                  <div className="p-2 bg-white border rounded whitespace-pre-wrap">
+                    {result.answer}
+                  </div>
                 </div>
               </>
             )}
