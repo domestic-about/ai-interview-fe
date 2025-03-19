@@ -1,54 +1,103 @@
-# React + TypeScript + Vite
+# 截屏问答应用
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个基于 Electron 和 React 的桌面应用，允许用户快速截取屏幕内容，自动识别截图中的问题并提供解答。特别适合编程学习、算法题解答等场景。
 
-Currently, two official plugins are available:
+## 功能特点
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **快捷键截屏**：通过 `Cmd/Ctrl+Shift+4` 快速捕获屏幕内容
+- **自动分析**：将截图发送到后端，自动识别题目内容
+- **智能回答**：为识别出的问题生成详细解答
+- **优雅界面**：使用 React 和 TailwindCSS 构建的现代化用户界面
 
-## Expanding the ESLint configuration
+## 技术栈
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **前端**：React 19, TailwindCSS 4
+- **桌面框架**：Electron 35
+- **构建工具**：Vite 6, TypeScript 5.7
+- **打包工具**：Electron Builder
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 项目结构
+frontend/
+├── electron/ # Electron 主进程代码
+│ ├── main.mjs # 主进程入口
+│ ├── preload.mjs # 预加载脚本
+│ └── mockBackend.mjs # 模拟后端响应
+├── src/
+│ ├── components/ # React 组件
+│ │ └── ScreenshotAnalyzer.tsx # 截图分析组件
+│ ├── App.tsx # 应用入口组件
+│ └── electron.d.ts # Electron API 类型定义
+└── package.json # 项目配置
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 工作流程
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. 用户按下快捷键 `Cmd/Ctrl+Shift+4` 进行截屏
+2. 应用捕获屏幕内容并保存为临时文件
+3. 截图在应用界面中显示预览
+4. 截图被发送到后端进行分析（当前使用模拟数据）
+5. 分析结果（问题和答案）显示在界面上
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+## 开发指南
+
+### 安装依赖
+
+```bash
+# 使用 yarn
+yarn
+
+# 或使用 npm
+npm install
 ```
+
+### 开发模式
+
+```bash
+# 启动 Electron 应用
+yarn electron:dev
+```
+
+### 构建应用
+
+```bash
+# 构建分发版本
+yarn electron:build
+```
+
+## 自定义和扩展
+
+### 连接真实后端
+
+目前应用使用模拟数据，要连接真实后端，修改 `electron/main.mjs` 中的 `analyze-screenshot` 处理函数：
+
+```javascript
+ipcMain.handle("analyze-screenshot", async (event, imagePath) => {
+  try {
+    const imageBuffer = fs.readFileSync(imagePath);
+    
+    // 替换为真实API调用
+    const response = await fetch('https://your-api-endpoint.com/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: imageBuffer
+    });
+    
+    return await response.json();
+  } catch (error) {
+    console.error("分析截图失败:", error);
+    return { error: error.message };
+  }
+});
+```
+
+### 自定义快捷键
+
+修改 `electron/main.mjs` 中的快捷键设置：
+
+```javascript
+const screenshotShortcut = 'CommandOrControl+Shift+5'; // 修改为你想要的快捷键
+```
+
+## 许可证
+
+[MIT](LICENSE)
